@@ -7,15 +7,14 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Server
     runs-on: ubuntu-latest
 
     steps:
-      # 1 Checkout code
+      # 1️⃣ Checkout repository on GitHub runner
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2 Deploy via SSH
+      # 2️⃣ Deploy to server
       - name: Deploy application
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -26,33 +25,31 @@ jobs:
           script: |
             set -e
 
-            # -----------------------------
-            # CONFIG
-            # -----------------------------
             APP_DIR=/var/www/officeserver
-            RELEASE_DIR=$APP_DIR/releases/$(date +%Y%m%d%H%M%S)
+            RELEASES_DIR=$APP_DIR/releases
+            RELEASE_DIR=$RELEASES_DIR/$(date +%Y%m%d%H%M%S)
 
-            echo "Creating release directory"
+            echo "Creating directories"
             mkdir -p $RELEASE_DIR
+            mkdir -p $APP_DIR/shared/storage
 
-            echo "Syncing application code"
-            cd $GITHUB_WORKSPACE
-            rsync -a --delete \
+            echo "Receiving code from GitHub runner"
+            rsync -az --delete \
               --exclude='.git' \
               --exclude='.github' \
               --exclude='node_modules' \
               --exclude='tests' \
               --exclude='.env' \
-              $GITHUB_WORKSPACE/ $RELEASE_DIR/
+              ${{ github.workspace }}/ $RELEASE_DIR/
 
-            echo "Linking shared files"
+            echo "Linking shared .env and storage"
             ln -sfn $APP_DIR/shared/.env $RELEASE_DIR/.env
             rm -rf $RELEASE_DIR/storage
             ln -sfn $APP_DIR/shared/storage $RELEASE_DIR/storage
 
             cd $RELEASE_DIR
 
-            echo "Installing PHP dependencies (fast)"
+            echo "Installing PHP dependencies"
             composer install \
               --no-dev \
               --prefer-dist \
@@ -60,13 +57,15 @@ jobs:
               --no-progress \
               --optimize-autoloader
 
-            echo "Running Laravel commands"
-            php artisan key:generate --force
+            echo "Laravel optimizations"
+            php artisan key:generate --force || true
             php artisan migrate --force || true
             php artisan config:clear
-            php artisan route:clear
+            php artisan config:cache
+            php artisan route:cache || true
+            php artisan view:cache || true
 
-            echo "Activating new release"
+            echo "Switching current symlink"
             ln -sfn $RELEASE_DIR $APP_DIR/current
 
             echo "Deployment completed successfully"
