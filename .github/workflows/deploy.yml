@@ -21,7 +21,7 @@ jobs:
           script: |
             set -e
 
-            APP_DIR=/var/www/laravel-demo
+            APP_DIR=/var/www/officeserver
             RELEASE_DIR=$APP_DIR/releases/$(date +%Y%m%d%H%M%S)
 
             mkdir -p $RELEASE_DIR
