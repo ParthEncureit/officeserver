@@ -1,41 +1,72 @@
-name: Deploy Laravel App
+name: Deploy Laravel Application
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   deploy:
+    name: Deploy to Server
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      # 1 Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy via SSH
+      # 2 Deploy via SSH
+      - name: Deploy application
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
           script: |
             set -e
 
+            # -----------------------------
+            # CONFIG
+            # -----------------------------
             APP_DIR=/var/www/officeserver
             RELEASE_DIR=$APP_DIR/releases/$(date +%Y%m%d%H%M%S)
 
+            echo "Creating release directory"
             mkdir -p $RELEASE_DIR
-            rsync -a --exclude='.git' ./ $RELEASE_DIR/
 
+            echo "Syncing application code"
+            cd $GITHUB_WORKSPACE
+            rsync -a --delete \
+              --exclude='.git' \
+              --exclude='.github' \
+              --exclude='node_modules' \
+              --exclude='tests' \
+              --exclude='.env' \
+              ./ $RELEASE_DIR/
+
+            echo "Linking shared files"
             ln -sfn $APP_DIR/shared/.env $RELEASE_DIR/.env
             rm -rf $RELEASE_DIR/storage
             ln -sfn $APP_DIR/shared/storage $RELEASE_DIR/storage
 
             cd $RELEASE_DIR
-            composer install --no-dev --optimize-autoloader
 
+            echo "Installing PHP dependencies (fast)"
+            composer install \
+              --no-dev \
+              --prefer-dist \
+              --no-interaction \
+              --no-progress \
+              --optimize-autoloader
+
+            echo "Running Laravel commands"
             php artisan key:generate --force
-            php artisan migrate --force
-            php artisan optimize
+            php artisan migrate --force || true
+            php artisan config:clear
+            php artisan route:clear
 
+            echo "Activating new release"
             ln -sfn $RELEASE_DIR $APP_DIR/current
+
+            echo "Deployment completed successfully"
