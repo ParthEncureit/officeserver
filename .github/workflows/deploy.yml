@@ -43,7 +43,7 @@ jobs:
               --exclude='node_modules' \
               --exclude='tests' \
               --exclude='.env' \
-              ./ $RELEASE_DIR/
+              $GITHUB_WORKSPACE/ $RELEASE_DIR/
 
             echo "Linking shared files"
             ln -sfn $APP_DIR/shared/.env $RELEASE_DIR/.env
