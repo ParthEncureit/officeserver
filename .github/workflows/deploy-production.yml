@@ -7,9 +7,11 @@ on:
 
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true &&
+        github.event.pull_request.head.ref == 'staging'
+
     runs-on: ubuntu-latest
-    environment: production
+    environment: production   # approval gate
 
     steps:
       - uses: actions/checkout@v4
@@ -19,7 +21,7 @@ jobs:
           php-version: '8.4'
           tools: composer
 
-      - run: composer install --no-interaction --no-progress
+      - run: composer install --no-interaction --no-progress --no-dev
 
       - name: Setup SSH
         run: |
@@ -33,4 +35,5 @@ jobs:
           echo "SERVER_HOST=${{ secrets.SERVER_HOST }}" >> $GITHUB_ENV
           echo "SERVER_USER=${{ secrets.SERVER_USER }}" >> $GITHUB_ENV
 
-      - run: vendor/bin/dep deploy production
+      - name: Deploy to production
+        run: vendor/bin/dep deploy production

@@ -1,15 +1,16 @@
 <?php
+
 namespace Deployer;
 
 require 'recipe/laravel.php';
 
 set('application', 'officeserver');
-set('repository', 'git@github.com:ORG/REPO.git'); 
+set('repository', 'git@github.com:ORG/REPO.git');
+
 set('keep_releases', 5);
 
-set('release_name', function () {
-    return date('YmdHis');
-});
+// Unique release names → avoids collision
+set('release_name', fn () => date('YmdHis'));
 
 add('shared_files', ['.env']);
 add('shared_dirs', ['storage']);
