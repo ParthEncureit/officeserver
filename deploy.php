@@ -7,7 +7,7 @@ require 'recipe/laravel.php';
 set('application', 'officeserver');
 
 // Repository is optional when using GitHub Actions
-set('repository', 'git@github.com:ORG/REPO.git');
+set('repository', 'https://github.com/ORG/REPO.git');
 
 set('keep_releases', 5);
 
