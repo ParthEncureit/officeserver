@@ -1,28 +1,39 @@
-name: Deploy to production
+name: Deploy to Production
 
 on:
   pull_request:
-    branches: [production]
+    branches:
+      - production
     types: [closed]
 
 jobs:
   deploy:
-    if: >
-      github.event.pull_request.merged == true &&
-      github.event.pull_request.head.ref == 'development'
-
+    # Only run if PR was merged (not just closed)
+    if: github.event.pull_request.merged == true
+    
     runs-on: ubuntu-latest
-    environment: production
+    environment: 
+      name: production
+      # This requires manual approval in GitHub (configure in Settings → Environments)
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: production  # Important: checkout the production branch after merge
 
-      - uses: shivammathur/setup-php@v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          tools: composer
+          extensions: mbstring, xml, ctype, json, bcmath, pdo, pdo_mysql
+          coverage: none
 
-      - run: composer install --no-interaction --no-progress
+      - name: Install Deployer
+        run: |
+          curl -LO https://deployer.org/deployer.phar
+          chmod +x deployer.phar
+          sudo mv deployer.phar /usr/local/bin/dep
 
       - name: Setup SSH
         run: |
@@ -37,4 +48,28 @@ jobs:
           echo "SERVER_USER=${{ secrets.SERVER_USER }}" >> $GITHUB_ENV
 
       - name: Deploy to production
-        run: vendor/bin/dep deploy production
+        run: dep deploy production -vvv
+
+      - name: Comment on PR
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Successfully deployed to **production**\n\n🔗 https://yourserver.com\n\n**Rollback command:** `dep rollback production`'
+            })
+
+      - name: Comment on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ Deployment to **production** failed\n\nCheck the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.\n\n⚠️ Production was NOT modified.'
+            })
