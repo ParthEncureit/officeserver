@@ -73,13 +73,13 @@ host('staging')
     ->set('writable_mode', 'chown');
 
 // -------------------------------------------------
-// PRODUCTION Environment
+// PRODUCTION Environment (main branch)
 // -------------------------------------------------
 host('production')
     ->setHostname(getenv('SERVER_HOST'))
     ->setRemoteUser(getenv('SERVER_USER'))
     ->setDeployPath('/var/www/officeserver-production')
-    ->set('branch', 'production')
+    ->set('branch', 'main')  // Changed from 'production' to 'main'
     ->set('http_user', 'www-data')
     ->set('writable_mode', 'chown');
 
