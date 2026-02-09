@@ -7,7 +7,9 @@ on:
 
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true &&
+        github.event.pull_request.head.ref == 'development'
+
     runs-on: ubuntu-latest
     environment: staging
 
@@ -19,7 +21,8 @@ jobs:
           php-version: '8.4'
           tools: composer
 
-      - run: composer install --no-interaction --no-progress
+      # Install only what deployer needs
+      - run: composer install --no-interaction --no-progress --no-dev
 
       - name: Setup SSH
         run: |
@@ -33,4 +36,5 @@ jobs:
           echo "SERVER_HOST=${{ secrets.SERVER_HOST }}" >> $GITHUB_ENV
           echo "SERVER_USER=${{ secrets.SERVER_USER }}" >> $GITHUB_ENV
 
-      - run: vendor/bin/dep deploy staging
+      - name: Deploy to staging
+        run: vendor/bin/dep deploy staging
