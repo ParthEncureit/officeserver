@@ -64,10 +64,13 @@ set('rsync', [
 // -------------------------------------------------
 // STAGING Environment
 // -------------------------------------------------
+// -------------------------------------------------
+// STAGING Environment
+// -------------------------------------------------
 host('staging')
-    ->setHostname(getenv('SERVER_HOST'))
-    ->setRemoteUser(getenv('SERVER_USER'))
-    ->setDeployPath('/var/www/officeserver-staging')
+    ->hostname(getenv('SERVER_HOST'))
+    ->user(getenv('SERVER_USER'))
+    ->set('deploy_path', '/var/www/officeserver-staging')
     ->set('branch', 'staging')
     ->set('http_user', 'www-data')
     ->set('writable_mode', 'chown');
@@ -76,13 +79,13 @@ host('staging')
 // PRODUCTION Environment (main branch)
 // -------------------------------------------------
 host('production')
-    ->setHostname(getenv('SERVER_HOST'))
-    ->setRemoteUser(getenv('SERVER_USER'))
-    ->setDeployPath('/var/www/officeserver-production')
-    ->set('branch', 'main')  // Changed from 'production' to 'main'
+    ->hostname(getenv('SERVER_HOST'))
+    ->user(getenv('SERVER_USER'))
+    ->set('deploy_path', '/var/www/officeserver-production')
+    ->set('branch', 'main')
     ->set('http_user', 'www-data')
     ->set('writable_mode', 'chown');
-
+    
 // -------------------------------------------------
 // Custom Tasks
 // -------------------------------------------------
