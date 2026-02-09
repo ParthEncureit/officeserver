@@ -3,7 +3,7 @@ name: Deploy to Production
 on:
   pull_request:
     branches:
-      - production
+      - main
     types: [closed]
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: production  # Important: checkout the production branch after merge
+          ref: main  # Checkout the main branch after merge
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
