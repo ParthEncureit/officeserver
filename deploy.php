@@ -4,7 +4,7 @@ namespace Deployer;
 require 'recipe/laravel.php';
 
 set('application', 'officeserver');
-set('repository', 'git@github.com:ORG/REPO.git'); // 👈 REQUIRED
+set('repository', 'git@github.com:ORG/REPO.git'); 
 set('keep_releases', 5);
 
 set('release_name', function () {
