@@ -16,6 +16,6 @@ add('writable_dirs', ['storage', 'bootstrap/cache']);
 after('deploy:failed', 'deploy:unlock');
 
 host('staging')
-    ->setHostname(getenv('SERVER_HOST'))
-    ->setRemoteUser(getenv('SERVER_USER'))
+    ->setHostname('61.2.229.179')
+    ->setRemoteUser('encureit-espl')
     ->setDeployPath('/var/www/officeserver');
